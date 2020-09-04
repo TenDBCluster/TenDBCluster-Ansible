@@ -1,0 +1,62 @@
+[client]
+port={{mysql_port}}
+socket={{mysql_data_dir}}/mysql.sock
+
+[mysqld]
+default-storage-engine=innodb
+skip-name-resolve
+datadir={{mysql_data_dir}}/data
+character-set-server=utf8mb4
+# innodb_buffer_pool_size={% if innodb_buffer_pool_size_mb is defined %}{{ [innodb_buffer_pool_size_mb_auto, innodb_buffer_pool_size_mb] | min }}{% else %}{{ innodb_buffer_pool_size_mb_auto }}{% endif %}M
+innodb_buffer_pool_size={{innodb_buffer_pool_size_mb}}M
+innodb_data_home_dir={{mysql_data_dir}}/innodb/data
+innodb_file_per_table=1
+#innodb_flush_log_at_trx_commit=0
+innodb_lock_wait_timeout=50
+innodb_log_buffer_size=2048M
+innodb_log_file_size=256M
+innodb_log_files_in_group=4
+innodb_log_group_home_dir={{mysql_data_dir}}/innodb/log
+slow_query_log_file={{mysql_log_dir}}/{{mysql_port}}/slow-query.log
+#max_binlog_size=256M
+port={{mysql_port}}
+relay-log={{mysql_data_dir}}/relay-log/relay-log.bin
+server_id={{server_id}}
+skip-external-locking
+socket={{mysql_data_dir}}/mysql.sock
+tmpdir={{mysql_data_dir}}/tmp
+wait_timeout=86400
+report_host={{ansible_host}}
+
+#sync_binlog=1
+log_bin=mysql-bin
+binlog_format=row
+expire_logs_days=3
+max_binlog_size=1024M
+binlog-checksum=CRC32
+#replicate-ignore-db=mysql
+#replicate-wild-ignore-table=mysql.%
+
+#master-info-repository=table
+#relay-log-info-repository=table
+#relay-log-recovery=ON
+
+gtid-mode = ON
+enforce-gtid-consistency = ON
+log-slave-updates = ON
+
+{% for k,v in mycnf_mysqld.iteritems() %}
+{{k}}={{v}}
+{% endfor %}
+
+[mysqld_safe]
+pid-file="{{mysql_data_dir}}/mysqld.pid"
+
+[mysql]
+default-character-set=utf8mb4
+port={{mysql_port}}
+socket={{mysql_data_dir}}/mysql.sock
+
+{% for k,v in mycnf_mysqld.iteritems() %}
+{{k}}={{v}}
+{% endfor %}

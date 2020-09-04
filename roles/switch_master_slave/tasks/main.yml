@@ -1,0 +1,26 @@
+---
+- name: Check mandatory variables are defined. run in master
+  assert:
+    that:
+      - master_tgt is defined
+      - hostvars[master_tgt]['mysql_shard'] == mysql_shard
+
+- name: templating switch script
+  template:
+    src: switch_master_slave.sh.j2
+    dest: /data/switch_master_slave.sh.{{master_tgt}}.{{inventory_hostname}}
+    mode: 0755
+#  delegate_to: "{{ groups['tdbctl'][0] }}"
+#  run_once: yes
+#  when: "'tendb' in group_names"
+
+#- name: Manual action
+#  debug:
+#    msg: "run switch script /data/switch_master_slave.sh.{{master}}.{{inventory_hostname}} located tdbctl[0]: {{ groups['tdbctl'][0] }}"
+
+- name: start switch master slave
+  shell: sh /data/switch_master_slave.sh.{{master_tgt}}.{{inventory_hostname}}
+#  delegate_to: "{{ groups['tdbctl'][0] }}"
+#  run_once: yes
+#
+- include: update_route.yml

@@ -1,0 +1,46 @@
+---
+- hosts: tendb
+  tasks:
+   - name: check role master or slave
+     assert:
+       that:
+         - (master is defined and mysql_shard == hostvars[master]['mysql_shard']) or (master is not defined and role == "master")
+
+- name: install_tendb_slave.yml
+  import_playbook: install_tendb_slave.yml
+
+# backup data run on master. if master is not running, fail!
+- hosts: tendb
+  tasks:
+    - name: create backup from master
+      include_role:
+        name: build_slave
+        tasks_from: create_backup_master.yml
+  vars:
+    slave_mysql_host: "{{ansible_host}}"
+    slave_mysql_port: "{{mysql_port}}"
+    master_mysql_host: "{% for h in groups[mysql_shard] if hostvars[h]['role'] == 'master' %}{{ hostvars[h]['ansible_host'] }}{% endfor %}"
+    master_mysql_port: "{% for h in groups[mysql_shard] if hostvars[h]['role'] == 'master' %}{{ hostvars[h]['mysql_port'] }}{% endfor %}"
+    master_mysql_instanceid: "{% for h in groups[mysql_shard] if hostvars[h]['role'] == 'master' %}{{ h }}{% endfor %}"
+
+# restore data run on slaves. change master need GTID
+- hosts: tendb
+  tasks:
+    - name: copy and restore backup to slave
+      include_role:
+        name: build_slave
+        tasks_from: restore_backup.yml
+  vars:
+    slave_mysql_host: "{{ansible_host}}"
+    slave_mysql_port: "{{mysql_port}}"
+    master_mysql_host: "{% for h in groups[mysql_shard] if hostvars[h]['role'] == 'master' %}{{ hostvars[h]['ansible_host'] }}{% endfor %}"
+    master_mysql_port: "{% for h in groups[mysql_shard] if hostvars[h]['role'] == 'master' %}{{ hostvars[h]['mysql_port'] }}{% endfor %}"
+    master_mysql_instanceid: "{% for h in groups[mysql_shard] if hostvars[h]['role'] == 'master' %}{{ h }}{% endfor %}"
+
+# change master
+- hosts: tendb
+  tasks:
+    - name: change master
+      include_role:
+        name: build_slave
+        tasks_from: change_master.yml

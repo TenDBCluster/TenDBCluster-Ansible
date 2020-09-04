@@ -1,0 +1,11 @@
+---
+- hosts: tdbctl
+  roles:
+    - role: tdbctl
+
+#- hosts: tdbctl
+#  tasks:
+#    - name: grant privileges for tdbctl
+#      include_role:
+#        name: tdbctl
+#        tasks_from: grant.yml

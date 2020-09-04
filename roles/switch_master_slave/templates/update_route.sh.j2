@@ -1,0 +1,43 @@
+#!/bin/bash
+
+
+master_host_old={{ hostvars[master_old]['ansible_host'] }}
+master_port_old={{ hostvars[master_old]['mysql_port'] }}
+master_shard_old={{ hostvars[master_old]['mysql_shard'] }}
+
+master_host_tgt={{ hostvars[master_tgt]['ansible_host'] }}
+master_port_tgt={{ hostvars[master_tgt]['mysql_port'] }}
+master_shard_tgt={{ hostvars[master_tgt]['mysql_shard'] }}
+
+if [ $master_shard_old != $master_shard_tgt ];then
+  echo "wrong shard for host master_shard_old=$master_shard_old master_shard_tgt=$master_shard_tgt"
+  exit 1
+fi
+
+USERPASS_OPTS="-u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}}"
+
+function update_route() {
+  # update tdbctl to make old slave as new master
+  tdbctl_host={{hostvars[groups['tdbctl'][0]]['ansible_host']}}
+  tdbctl_port={{hostvars[groups['tdbctl'][0]]['mysql_port']}}
+  mysql $USERPASS_OPTS -h${tdbctl_host} -P${tdbctl_port} -e "
+  -- update mysql.servers set Host='$master_host_tgt',Port=${master_port_tgt} where Host='${master_host_old}' and Port=$master_port_old and Server_name='${master_shard_tgt}';
+  update mysql.servers set Host='$master_host_tgt',Port=${master_port_tgt} where Server_name='${master_shard_tgt}';
+  tdbctl flush routing;
+  "
+}
+
+function check_route() {
+  # update tdbctl to make old slave as new master
+  tdbctl_host={{hostvars[groups['tdbctl'][0]]['ansible_host']}}
+  tdbctl_port={{hostvars[groups['tdbctl'][0]]['mysql_port']}}
+  matchedMaster=`mysql -N $USERPASS_OPTS -h${tdbctl_host} -P${tdbctl_port} -e "select count(*) from mysql.servers where Host='${master_host_old}' and Port=$master_port_old and Server_name='${master_shard_tgt}'"`
+  if [ $matchedMaster -eq 0 ];then
+    echo "expect old master is master_host_old=$master_host_old master_port_old=$master_port_old Server_name=$master_shard_tgt"
+    # exit 1
+  fi
+}
+
+check_route
+
+update_route

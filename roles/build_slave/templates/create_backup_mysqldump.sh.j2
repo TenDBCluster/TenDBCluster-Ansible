@@ -1,0 +1,11 @@
+#!/bin/bash
+backup_dir={{backup_dir}}
+mkdir -p $backup_dir
+backup_file={{master_mysql_host}}_{{master_mysql_port}}.sql
+rm -f ${backup_dir}/$backup_file
+
+# MYSQL_MASTER_OPTS="-u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}} -h{{master_mysql_host}} -P{{master_mysql_port}}"
+MYSQL_MASTER_OPTS="-u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}} -h127.0.0.1 -P{{master_mysql_port}}"
+# mysql $MYSQL_MASTER_OPTS -e ""
+
+/usr/local/mysql/bin/mysqldump $MYSQL_MASTER_OPTS --all-databases --single-transaction --default-character-set=utf8 --triggers --routines --events --set-gtid-purged=ON > ${backup_dir}/$backup_file

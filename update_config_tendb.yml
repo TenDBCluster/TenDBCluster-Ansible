@@ -1,0 +1,15 @@
+---
+- hosts: tendb
+  tasks:
+    - name: update and sync config to tendb/tendbslave
+      include_role: 
+        name: tendb
+        tasks_from: mysql_config.yml
+
+- hosts: tendb
+  tasks:
+    - name: restart tendb server
+      include_role:
+        name: tendb
+        tasks_from: restart.yml
+      when: "role != 'master'"

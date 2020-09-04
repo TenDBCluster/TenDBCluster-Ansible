@@ -1,0 +1,69 @@
+---
+- name: check | instance is already running
+  shell: netstat -ntl | grep ":{{mysql_port}} "
+  register: ret_out
+  failed_when: "'LISTEN' in ret_out.stdout and (force is not defined or force != 'true')"
+
+- name: install | Donwload mysql tarball from fileserver
+  get_url:
+    url: '{{ mysql_pkg_url }}'
+    dest: "/data/{{ mysql_pkg_tar }}"
+    force: no
+    checksum: "{{ 'md5:' + mysql_pkg_md5 if checksum_enabled else '' }}"
+  ignore_errors: yes
+
+- name: install | Copy mysql binary package to agent
+  unarchive:
+    src: "/data/{{ mysql_pkg_tar }}"
+    dest: "/usr/local"
+    creates: "/usr/local/{{ mysql_pkg }}"
+    remote_src: yes
+    extra_opts:
+      - --keep-old-files
+      - --no-overwrite-dir
+      
+- name: install | Create symbolic link to {{mysql_basedir}}
+  file:
+    src: "/usr/local/{{ mysql_pkg }}"
+    dest: "{{mysql_basedir}}"
+    state: link
+  ignore_errors: yes
+
+- name: install | Make mysql dirs
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: mysql
+    group: mysql
+    recurse: yes
+  with_items:
+    - "{{ mysql_log_dir }}/{{ mysql_port }}"
+    - "{{ mysql_conf_dir }}"
+    - "{{ mysql_home_dir }}"
+    - "{{ mysql_data_dir }}"
+    - "{{ mysql_data_dir }}/data"
+    - "{{ mysql_data_dir }}/innodb/data"
+    - "{{ mysql_data_dir }}/innodb/log"
+    - "{{ mysql_data_dir }}/relay-log"
+    - "{{ mysql_data_dir }}/tmp"
+    - "{{ backup_dir }}"
+
+- include: mysql_config.yml
+
+- name: Ensure mysql_home user.group
+  file:
+    path: "/usr/local/{{ mysql_pkg }}"
+    owner: mysql
+    group: mysql
+    recurse: yes
+
+- name: initialize mysql home
+  shell: |
+    cd {{mysql_basedir}}
+    ./bin/mysqld --defaults-file={{mysql_conf_dir}}/my.cnf.{{mysql_port}} --initialize-insecure --user=mysql
+  args:
+    chdir: "{{mysql_basedir}}"
+    creates: "{{ mysql_data_dir }}/innodb/data/ibdata1"
+  become: yes
+  become_user: mysql
+  become_method: su

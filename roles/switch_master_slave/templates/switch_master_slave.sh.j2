@@ -1,0 +1,79 @@
+#!/bin/bash
+
+local_host={{ ansible_host }}
+local_port={{ mysql_port }}
+local_shard={{ mysql_shard }}
+
+local_role={{role}}
+local_mysql={{inventory_hostname}}
+master_tgt={{master_tgt}}
+#master_old={% if role == "master" %}{{ inventory_hostname }}{% else %}{{ master }}{% endif %}
+
+master_host_old={{ hostvars[master_old]['ansible_host'] }}
+master_port_old={{ hostvars[master_old]['mysql_port'] }}
+master_shard_old={{ hostvars[master_old]['mysql_shard'] }}
+
+master_host_tgt={{ hostvars[master_tgt]['ansible_host'] }}
+master_port_tgt={{ hostvars[master_tgt]['mysql_port'] }}
+master_shard_tgt={{ hostvars[master_tgt]['mysql_shard'] }}
+
+
+if [ $master_shard_old != $master_shard_tgt -o $master_shard_old != $local_shard ];then
+  echo "wrong shard for host master_shard_old=$master_shard_old master_shard_tgt=$master_shard_tgt local_shard=$local_shard"
+  exit 1
+fi
+
+USERPASS_OPTS="-u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}}"
+LOCAL_OPTS="$USERPASS_OPTS -h127.0.0.1 -P${local_port}"
+
+function reset_slave() {
+  # stop old slave thread
+  mysql $LOCAL_OPTS -e "stop slave io_thread"
+  sleep 0.5
+  mysql $LOCAL_OPTS -e "stop slave;reset slave;"
+  sleep 1
+
+  # set old slave writtable
+  mysql $LOCAL_OPTS -e "set global read_only=OFF"
+}
+
+function check_route() {
+  # update tdbctl to make old slave as new master
+  tdbctl_host={{hostvars[groups['tdbctl'][0]]['ansible_host']}}
+  tdbctl_port={{hostvars[groups['tdbctl'][0]]['mysql_port']}}
+  matchedMaster=`mysql -N $USERPASS_OPTS -h${tdbctl_host} -P${tdbctl_port} -e "select count(*) from mysql.servers where Host='${master_host_old}' and Port=$master_port_old and Server_name='${master_shard_tgt}'"`
+  if [ $matchedMaster -eq 0 ];then
+    echo "no master matched. master_host_old=$master_host_old master_port_old=$master_port_old Server_name=$master_shard_tgt"
+    exit 1
+  fi
+}
+
+function change_master_new() {
+# set old master to read-only
+mysql $LOCAL_OPTS -e "set global read_only=ON"
+sleep 1
+
+# change old master to new slave
+cat << EOF | mysql $LOCAL_OPTS
+STOP SLAVE FOR CHANNEL '';
+-- reset slave all;
+CHANGE MASTER TO MASTER_HOST="$master_host_tgt",MASTER_port=${master_port_tgt},MASTER_USER='{{tendbcluster_user_repl}}',MASTER_PASSWORD='{{tendbcluster_user_repl_pass}}',MASTER_AUTO_POSITION=1;
+start slave;
+show slave status\G
+EOF
+}
+
+## check_route should run in tdbctl
+# check_route
+
+if [ $local_mysql = $master_tgt ];then
+  # I'm the new master. stop slave, reset slave, update route
+  reset_slave
+#   update_route # hook
+else
+  if [ $local_role = "master" -o $local_mysql = "{{master_old}}" ];then
+    echo "this is old master"
+  fi
+  # I'm intend to be a slave. change master
+  change_master_new
+fi

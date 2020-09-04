@@ -1,0 +1,7 @@
+---
+- hosts: tendbcluster
+  tasks:
+    - name: add ssh pub key to remote for user root
+      include_role:
+        name: common
+        tasks_from: sshkey.yml

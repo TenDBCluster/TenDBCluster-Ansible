@@ -1,0 +1,17 @@
+---
+- name: configure | Templating routings
+  template:
+    src: "{{ item }}"
+    dest: "/data/{{ item }}.{{mysql_port}}"
+  with_items:
+    - flush_tdbctl.sql.j2
+ # when: "'tdbctl' in group_names"
+  when: "groups.tdbctl.index(inventory_hostname) == 0"
+
+- name: configure | Flush routes to tspider
+  shell: |
+    mysql -f -uroot --socket {{mysql_data_dir}}/mysql.sock < /data/{{ item }}.{{mysql_port}}
+    #rm -f /data/flush_tdbctl.{{mysql_port}}.sql
+  with_items:
+    - flush_tdbctl.sql.j2
+  when: "groups.tdbctl.index(inventory_hostname) == 0"

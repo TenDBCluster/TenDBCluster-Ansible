@@ -1,0 +1,4 @@
+- hosts: tendbcluster
+  roles:
+    - role: os-init
+    - role: common

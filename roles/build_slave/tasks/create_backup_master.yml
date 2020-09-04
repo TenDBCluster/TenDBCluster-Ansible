@@ -1,0 +1,28 @@
+---
+- name: Check mandatory variables are defined when create backup
+  assert:
+    that:
+      - (master is defined and mysql_shard == hostvars[master]['mysql_shard']) or (master is not defined and role == "master")
+      - (master_mysql_host is defined) and (master_mysql_host | length > 0)
+
+- name: templating backup script create_backup_mysqldump.sh
+  template:
+    src: create_backup_mysqldump.sh.j2
+    dest: /data/create_backup_mysqldump.sh_{{master_mysql_host}}_{{master_mysql_port}}
+    mode: 0755
+  delegate_to: "{{master_mysql_instanceid}}"
+  # run_once: yes
+
+- name: run backup in master
+  command: sh /data/create_backup_mysqldump.sh_{{master_mysql_host}}_{{master_mysql_port}}
+  delegate_to: "{{ master_mysql_instanceid }}"
+  args:
+    creates: "{{backup_dir}}/{{master_mysql_host}}_{{master_mysql_port}}.sql"
+
+- name: download backup files from src_master to dest_slave
+#  command: sshpass -p {{ssh_mysql_password}} scp -o StrictHostKeyChecking=no -l 100000 -r mysql@{{master_mysql_host}}:{{backup_dir}}/{{master_mysql_host}}_{{master_mysql_port}}.sql {{backup_dir}}
+  shell: |
+    # echo "scp -3 -P 36000 -i {{ansible_ssh_private_key_file}} root@{{master_mysql_host}}:{{backup_dir}}/{{master_mysql_host}}_{{master_mysql_port}}.sql root@{{slave_mysql_host}}:{{backup_dir}}" >> /tmp/scp.txt
+    scp -3 -P 36000 -i {{ansible_ssh_private_key_file}} root@{{master_mysql_host}}:{{backup_dir}}/{{master_mysql_host}}_{{master_mysql_port}}.sql root@{{slave_mysql_host}}:{{backup_dir}}
+  when: "role == 'slave'"
+  delegate_to: localhost

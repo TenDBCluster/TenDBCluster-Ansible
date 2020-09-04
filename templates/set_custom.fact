@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# datadisk_threshold=80000
+
+my_memtotal_mb=`free -m|grep Mem:|awk '{print $2}'`
+my_processor_cpucores=`grep -c processor /proc/cpuinfo`
+
+my_os_release=`cat /etc/tlinux-release /etc/redhat-release 2>/dev/null |head -1`
+my_kernel_release=`uname -r`
+
+all_datadisk_total_size_mb=`df -B 1m|grep -v Filesystem|grep data|awk 'BEGIN{sum=0;count=0}{if ($2 > 80000) {sum+=$2;count++;}} END{print sum}'`
+all_datadisk_total_count=`df -B 1m|grep -v Filesystem|grep data|awk 'BEGIN{sum=0;count=0}{if ($2 > 80000) {sum+=$2;count++;}} END{print count}'`
+all_datadisk_mounts=`df -B 1m|grep -v Filesystem|grep data|awk '{if ($2 > 80000) {print $6}}'`
+all_datadisk_mounts=`echo $all_datadisk_mounts`  # convert \n to space
+
+echo "{\"my_memtotal_mb\":$my_memtotal_mb,\"my_processor_cpucores\":$my_processor_cpucores,\"my_os_release\":\"$my_os_release\",\"my_kernel_release\":\"$my_kernel_release\",\"all_datadisk_total_size_mb\":$all_datadisk_total_size_mb,\"all_datadisk_total_count\":$all_datadisk_total_count,\"all_datadisk_mounts\":\"$all_datadisk_mounts\"}"

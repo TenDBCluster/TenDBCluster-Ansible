@@ -1,0 +1,35 @@
+[client]
+port={{mysql_port}}
+socket={{mysql_data_dir}}/mysql.sock
+
+[mysqld]
+datadir={{mysql_data_dir}}/data
+socket={{mysql_data_dir}}/mysql.sock
+port={{mysql_port}}
+server_id={{ groups.tdbctl.index(inventory_hostname) + 10000 }}
+gtid_mode=ON
+enforce_gtid_consistency=ON
+master_info_repository=TABLE
+relay_log_info_repository=TABLE
+log_bin=mysql-bin
+binlog_checksum=NONE
+log_slave_updates=ON
+binlog_format=ROW
+report_host={{ansible_host}}
+
+{% if tdbctl_enable_mgr == "true" %}
+# mgr
+transaction_write_set_extraction=XXHASH64
+loose-group_replication_group_name="5ce71731-850e-11ea-a8dc-140564753c6a"
+loose-group_replication_start_on_boot=off
+loose-group_replication_local_address= "{{group_replication_local_address}}"
+loose-group_replication_group_seeds="{% for h in groups['tdbctl'] %}{{ hostvars[h]['group_replication_local_address'] }}{{ loop.last | ternary('', ',') }}{% endfor %}"
+
+loose-group_replication_bootstrap_group=off
+#loose-group_replication_single_primary_mode=off
+loose-group_replication_ip_whitelist='127.0.0.1,{% for h in groups['tdbctl'] %}{{ hostvars[h]['ansible_host'] }}{{ loop.last | ternary('', ',') }}{% endfor %}'
+{% endif %}
+
+[mysql]
+port={{mysql_port}}
+socket={{mysql_data_dir}}/mysql.sock 

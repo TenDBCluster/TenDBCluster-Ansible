@@ -1,0 +1,5 @@
+---
+- hosts: tendb
+  roles:
+    - role: tendb
+      when: "role == 'slave'"

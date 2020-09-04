@@ -1,0 +1,18 @@
+---
+- name: init_common.yml
+  import_playbook: init_common.yml
+
+- name: install_tendb.yml
+  import_playbook: install_tendb.yml
+
+- name: build_slave.yml
+  import_playbook: build_slave.yml
+
+- name: install_tspider.yml
+  import_playbook: install_tspider.yml
+
+- name: install_tdbctl.yml
+  import_playbook: install_tdbctl.yml
+
+#- name: deploy_monitor.yml
+#  import_playbook: deploy_monitoryml.yml

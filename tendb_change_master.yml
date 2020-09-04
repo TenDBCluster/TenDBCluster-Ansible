@@ -1,0 +1,7 @@
+---
+- hosts: tendb
+  tasks:
+    - name: change master
+      include_role:
+        name: switch_master_slave
+        tasks_from: change_master.yml

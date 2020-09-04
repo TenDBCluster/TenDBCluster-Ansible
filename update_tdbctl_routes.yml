@@ -1,0 +1,7 @@
+---
+- hosts: tdbctl
+  tasks:
+    - name: flush routing in tdbctl
+      include_role: 
+        name: tdbctl
+        tasks_from: flush.yml

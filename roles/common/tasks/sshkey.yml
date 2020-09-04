@@ -1,0 +1,8 @@
+---
+# todo: user mysql for remote login
+- name: add ssh key for root
+  authorized_key:
+    user: mysql
+    state: present
+    key: "{{ lookup('file', ansible_ssh_public_key_file) }}"
+

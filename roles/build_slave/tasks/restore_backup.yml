@@ -1,0 +1,25 @@
+---
+#- name: download backup files from src_master to dest_slave
+#  expect:
+#    command: scp -o StrictHostKeyChecking=no -l 100000 -r mysql@{{master_mysql_host}}:{{backup_dir}}/{{master_mysql_host}}_{{master_mysql_port}}.sql {{backup_dir}}
+#    responses:
+#      (?i)password: "{{ssh_mysql_password}}"
+#  when: "role == 'slave' and master != inventory_hostname"
+
+#- name: download backup files from src_master to dest_slave
+##  command: sshpass -p {{ssh_mysql_password}} scp -o StrictHostKeyChecking=no -l 100000 -r mysql@{{master_mysql_host}}:{{backup_dir}}/{{master_mysql_host}}_{{master_mysql_port}}.sql {{backup_dir}}
+#  shell: |
+#    echo "scp -3 -P 36000 -i {{ansible_ssh_private_key_file}} root@{{master_mysql_host}}:{{backup_dir}}/{{master_mysql_host}}_{{master_mysql_port}}.sql root@{{slave_mysql_host}}:{{backup_dir}}" >> /tmp/scp.txt
+#    scp -3 -P 36000 -i {{ansible_ssh_private_key_file}} root@{{master_mysql_host}}:{{backup_dir}}/{{master_mysql_host}}_{{master_mysql_port}}.sql root@{{slave_mysql_host}}:{{backup_dir}}
+#  delegate_to: localhost
+
+- name: templating restore script restore_slave_data.sh
+  template:
+    src: restore_slave_data.sh.j2
+    dest: /data/restore_slave_data.sh.{{ansible_host}}_{{mysql_port}}
+    mode: 0755
+  when: "role == 'slave' and master != inventory_hostname"
+
+- name: run restore
+  command: sh /data/restore_slave_data.sh.{{ansible_host}}_{{mysql_port}}
+  when: "role == 'slave' and master != inventory_hostname"

@@ -1,0 +1,18 @@
+-- write routes to tdbctl
+-- replace into mysql.servers values('SPT0','127.0.0.1','','mysql','mysql',20000,'','mysql','');
+{% for host in groups['tendb'] if hostvars[host]['role'] == 'master' %}
+replace into mysql.servers values('{{ hostvars[host]['mysql_shard'] }}','{{ hostvars[host]['ansible_host'] }}','','{{tendbcluster_user_admin}}','{{tendbcluster_user_admin_pass}}',{{ hostvars[host]['mysql_port'] }},'','mysql','');
+{% endfor %}
+
+-- replace into mysql.servers values('SPIDER0','127.0.0.1','','mysql','mysql',25000,'','SPIDER','');
+{% for host in groups['tspider'] %}
+replace into mysql.servers values('SPIDER{{loop.index0}}','{{ hostvars[host]['ansible_host'] }}','','{{tendbcluster_user_admin}}','{{tendbcluster_user_admin_pass}}',{{ hostvars[host]['mysql_port'] }},'','SPIDER','');
+{% endfor %}
+
+-- replace into mysql.servers values('TDBCTL0','127.0.0.1','','mysql','mysql',26000,'','TDBCTL','');
+{% for host in groups['tdbctl'] %}
+replace into mysql.servers values('TDBCTL{{loop.index0}}','{{ hostvars[host]['ansible_host'] }}','','{{tendbcluster_user_admin}}','{{tendbcluster_user_admin_pass}}',{{ hostvars[host]['mysql_port'] }},'','TDBCTL','');
+{% endfor %}
+
+-- flush routes to applying them to tspider
+tdbctl flush routing;

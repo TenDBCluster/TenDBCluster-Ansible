@@ -1,0 +1,12 @@
+---
+- name: tempate script for update tdbctl routes
+  template:
+    src: update_route.sh.j2
+    dest: /data/update_route.sh.{{master_tgt}}
+  delegate_to: "{{ groups['tdbctl'][0] }}"
+  run_once: yes
+
+- name: run update route
+  shell: sh /data/update_route.sh.{{master_tgt}}
+  delegate_to: "{{ groups['tdbctl'][0] }}"
+  run_once: yes

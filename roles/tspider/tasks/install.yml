@@ -1,0 +1,75 @@
+---
+- name: install | Donwload mysql tarball from fileserver
+  get_url:
+    url: '{{ tspider_pkg_url }}'
+    dest: "/data/{{ tspider_pkg_tar }}"
+    force: no
+    checksum: "{{ 'md5:' + tspider_pkg_md5 if checksum_enabled else '' }}"
+
+- name: install | Copy mysql binary package to agent
+  unarchive:
+    src: "/data/{{ tspider_pkg_tar }}"
+    dest: "/usr/local"
+    creates: "/usr/local/{{ tspider_pkg }}"
+    remote_src: yes
+    extra_opts:
+      - --keep-old-files
+      - --no-overwrite-dir
+
+- name: install | Create symbolic link to /usr/local/tspider
+  file:
+    src: "/usr/local/{{ tspider_pkg }}"
+    dest: "{{tspider_basedir}}"
+    state: link
+
+- name: install | Make mysql dirs
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: mysql
+    group: mysql
+    recurse: yes
+  with_items:
+    - "{{ mysql_log_dir }}/{{ mysql_port }}"
+    - "{{ mysql_conf_dir }}"
+    - "{{ mysql_home_dir }}"
+    - "{{ mysql_data_dir }}"
+    - "{{ mysql_data_dir }}/data"
+    - "{{ mysql_data_dir }}/innodb/data"
+    - "{{ mysql_data_dir }}/innodb/log"
+    - "{{ mysql_data_dir }}/relay-log"
+    - "{{ mysql_data_dir }}/tmp"
+    - "{{ backup_dir }}"
+
+- name: configure | Setup my.cnf file.
+  template:
+    dest: "{{ mysql_conf_dir }}/my.cnf.{{mysql_port}}"
+    src: my.cnf.tspider.j2
+    mode: 0644
+
+- name: Ensure mysql_home user.group
+  file:
+    path: "/usr/local/{{ tspider_pkg }}"
+    owner: mysql
+    group: mysql
+    recurse: yes
+
+- name: initialize mysql home
+  shell: |
+    cd {{tspider_basedir}}
+    ./scripts/mysql_install_db --defaults-file={{mysql_conf_dir}}/my.cnf.{{mysql_port}}
+  args:
+    chdir: "{{tspider_basedir}}"
+    creates: "{{ mysql_data_dir }}/innodb/data/ibdata1"
+  become: yes
+  become_user: mysql
+  become_method: su
+
+- name: start tspider
+  shell: "cd {{tspider_basedir}} && ./bin/mysqld_safe --defaults-file={{mysql_conf_dir}}/my.cnf.{{mysql_port}} --user=mysql &"
+  args:
+    chdir: "{{tspider_basedir}}"
+    creates: "{{mysql_data_dir}}/mysqld.pid"
+  become: yes
+  become_user: mysql
+  become_method: su

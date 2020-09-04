@@ -1,0 +1,50 @@
+---
+
+- name: mysqldump ...
+  hosts: tspider
+  vars:
+    tspider0_mysql_host: "{{hostvars[groups['tspider'][0]]['ansible_host']}}"
+    tspider0_mysql_port: "{{hostvars[groups['tspider'][0]]['mysql_port']}}"
+  tasks:
+    - name: dump mysql.user servers from tspider0:{{tspider0_mysql_host}}
+      shell: |
+          MYSQL_CONN_OPTS="-u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}} -h{{tspider0_mysql_host}} -P{{tspider0_mysql_port}}"
+          #echo "mysqldump -t --insert-ignore --skip-opt -u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}} -h{{tspider0_mysql_host}} -P{{tspider0_mysql_port}} mysql user > /data/mysql.user.data.sql.{{tspider0_mysql_port}}| ansible_host{{ansible_host}}:{{mysql_port}}">>dump.txt
+          #echo "mysqldump -t --insert-ignore --skip-opt $MYSQL_CONN_OPTS mysql user > /data/mysql.user.data.sql.{{tspider0_mysql_port}}| ansible_host{{ansible_host}}:{{mysql_port}}">>dump.txt
+          mysqldump -t --insert-ignore $MYSQL_CONN_OPTS mysql user > /data/mysql.user.data.sql.{{tspider0_mysql_port}}
+          mysqldump -t --replace $MYSQL_CONN_OPTS mysql servers > /data/mysql.servers.data.sql.{{tspider0_mysql_port}}
+      delegate_to: "{{ groups['tdbctl'][0] }}"
+      run_once: true
+    
+    - name: dump schemas from tspider0:{{tspider0_mysql_host}}
+      shell: |
+          MYSQL_CONN_OPTS="-u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}} -h{{tspider0_mysql_host}} -P{{tspider0_mysql_port}}"
+          # DB_LIST=`mysql $MYSQL_CONN_OPTS -Nse "SELECT GROUP_CONCAT(SCHEMA_NAME SEPARATOR ' ') FROM information_schema.SCHEMATA WHERE SCHEMA_NAME NOT IN ('mysql','information_schema','performance_schema','sys','test')"`
+          DB_LIST=$(mysql $MYSQL_CONN_OPTS -e "show databases"| grep -Ev "^(Database|mysql|performance_schema|information_schema|sys)$")
+          #echo "mysqldump $MYSQL_CONN_OPTS -d --databases $DB_LIST">>dump.txt
+          mysqldump $MYSQL_CONN_OPTS --skip-opt --skip-add-drop-table --skip-add-drop-database -d --databases $DB_LIST > /data/tspider.schema.sql.{{tspider0_mysql_port}}
+      delegate_to: "{{ groups['tdbctl'][0] }}"
+      run_once: true
+
+- name: restore
+  hosts: tspider
+  vars:
+    tspider_new_host: "{{ansible_host}}"
+    tspider_new_port: "{{mysql_port}}"
+    tspider0_mysql_host: "{{hostvars[groups['tspider'][0]]['ansible_host']}}"
+    tspider0_mysql_port: "{{hostvars[groups['tspider'][0]]['mysql_port']}}"
+  tasks:
+    - name: restore mysql.user
+      shell: |
+        # do not drop database or tables!! high risk
+        MYSQL_CONN_OPTS="-u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}} -h{{tspider_new_host}} -P{{tspider_new_port}}"
+        mysql -f $MYSQL_CONN_OPTS mysql < /data/mysql.user.data.sql.{{tspider0_mysql_port}}
+        mysql $MYSQL_CONN_OPTS mysql < /data/mysql.servers.data.sql.{{tspider0_mysql_port}}
+
+        sed -i '1i set ddl_execute_by_ctl=off;' /data/tspider.schema.sql.{{tspider0_mysql_port}}
+        mysql -f $MYSQL_CONN_OPTS < /data/tspider.schema.sql.{{tspider0_mysql_port}}
+    #- name: restore schemas
+    #  shell: |
+    #    mysql -u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}} -P{{mysql_port}} --socket {{mysql_socket}} < /data/tspider.schema.sql
+      when: "'tspider' in group_names"
+      delegate_to: "{{ groups['tdbctl'][0] }}"

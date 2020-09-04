@@ -1,0 +1,20 @@
+---
+- name: change master
+  shell: |
+    if [ "{{hostvars[master_tgt]['mysql_shard']}}" != "{{mysql_shard}}" ];then
+      echo "mysql_shard not match. exit"
+      exit 1
+    fi
+
+    USERPASS_OPTS="-u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}}"
+    LOCAL_OPTS="$USERPASS_OPTS -h127.0.0.1 -P{{mysql_port}}"
+    mysql $LOCAL_OPTS -e "STOP SLAVE; CHANGE MASTER TO MASTER_HOST='{{hostvars[master_tgt]['ansible_host']}}',MASTER_port={{hostvars[master_tgt]['mysql_port']}},MASTER_USER='{{tendbcluster_user_repl}}',MASTER_PASSWORD='{{tendbcluster_user_repl_pass}}',MASTER_AUTO_POSITION=1; START SLAVE; SHOW SLAVE STATUS\G"
+  register: ret_out
+
+- name: "show comannd stdout"
+  debug:
+    msg: "{{ ret_out.stdout_lines }}"
+
+- name: "show command stderr"
+  debug:
+    msg: "{{ ret_out.stderr.split('\n') }}"

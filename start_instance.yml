@@ -1,0 +1,25 @@
+---
+- name: check if instance {{instance_type}}:{{mysql_port}} is already running
+  shell: netstat -ntl | grep ":{{mysql_port}} "
+  register: ret_out1
+  ignore_errors: True
+  #failed_when: "'LISTEN' in ret_out1.stdout"
+
+- block:
+  - name: start mysql server
+    shell: 
+      cd /usr/local/{{instance_type}} && ./bin/mysqld_safe --defaults-file={{mysql_conf_dir}}/my.cnf.{{mysql_port}} --user=mysql &
+      sleep 10
+    args:
+      chdir: "/usr/local/{{instance_type}}"
+      creates: "{{mysql_data_dir}}/mysqld.pid"
+    become: yes
+    become_user: mysql
+    become_method: su
+
+  - name: check if instance {{instance_type}}:{{mysql_port}} is running
+    shell: netstat -ntl | grep ":{{mysql_port}} "
+    register: ret_out2
+    failed_when: "'LISTEN' not in ret_out2.stdout"
+
+  when: "'LISTEN' not in ret_out1.stdout"

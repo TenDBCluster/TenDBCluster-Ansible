@@ -1,0 +1,9 @@
+- name: 'Check mandatory variables are defined'
+  assert:
+    that:
+      - groups['tendb'] | length > 1
+      - groups['tspider'] | length > 0
+      - groups['tdbctl'] | length > 0
+      # - groups['tendb'] | length == tendbcluster_shard_num
+      - tendbcluster_name is defined
+      - ansible_ssh_public_key_file is defined

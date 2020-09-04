@@ -1,0 +1,5 @@
+---
+instance_type: tdbctl
+tdbctl_basedir: /usr/local/tdbctl
+
+group_replication_local_address: "{{ansible_host}}:23306"

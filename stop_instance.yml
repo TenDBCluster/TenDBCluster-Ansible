@@ -1,0 +1,10 @@
+---
+- name: stop mysql server my.cnf.{{mysql_port}}
+  shell: |
+    ps -ef|grep mysqld|grep my.cnf.{{mysql_port}} |grep -v grep|awk '{print "kill "$2}'|sh
+    sleep 10
+
+- name: check if instance {{mysql_port}} is running
+  shell: netstat -ntl | grep ":{{mysql_port}} "
+  register: ret_out3
+  failed_when: "'LISTEN' in ret_out3.stdout"

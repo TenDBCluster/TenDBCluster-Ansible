@@ -1,0 +1,9 @@
+---
+- name: 'Check mandatory variables are defined'
+  assert:
+    that:
+      - mysql_shard == hostvars[master]['mysql_shard']
+
+- include: create_backup_master.yml
+- include: restore_backup.yml
+- include: change_master.yml

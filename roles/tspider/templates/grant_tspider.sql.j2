@@ -1,0 +1,10 @@
+-- grant for tdbctl
+set ddl_execute_by_ctl=off;
+create user {{tendbcluster_user_admin}}@'127.0.0.1' identified by '{{tendbcluster_user_admin_pass}}';
+grant all privileges on *.* to {{tendbcluster_user_admin}}@'127.0.0.1' with grant option;
+grant all privileges on *.* to {{tendbcluster_user_admin}}@'localhost' identified by '{{tendbcluster_user_admin_pass}}' with grant option;
+
+{% for host in groups['tdbctl'] %}
+create user {{tendbcluster_user_admin}}@'{{ hostvars[host]['ansible_host'] }}' identified by '{{tendbcluster_user_admin_pass}}';
+grant all privileges on *.* to {{tendbcluster_user_admin}}@'{{ hostvars[host]['ansible_host'] }}' with grant option;
+{% endfor %}

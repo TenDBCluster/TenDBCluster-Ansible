@@ -1,0 +1,10 @@
+#!/bin/bash
+
+MYSQL_SLAVE_OPTS="-u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}} -h127.0.0.1 -P{{mysql_port}}"
+
+cat << EOF | mysql $MYSQL_SLAVE_OPTS
+stop slave;
+CHANGE MASTER TO MASTER_HOST='{{master_mysql_host}}',MASTER_port={{master_mysql_port}},MASTER_USER='{{tendbcluster_user_repl}}',MASTER_PASSWORD='{{tendbcluster_user_repl_pass}}',MASTER_AUTO_POSITION=1;
+start slave;
+show slave status\G
+EOF

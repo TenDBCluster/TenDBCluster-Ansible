@@ -1,0 +1,6 @@
+---
+- name: build_slave.yml
+  import_playbook: build_slave.yml
+
+- name: switch_master_slave.yml
+  import_playbook: switch_master_slave.yml

@@ -1,0 +1,16 @@
+#- name: Add user mysql
+#  script: init_add_user.sh
+#  tags:
+#    - init_adduser
+
+- name: create mysql user
+  user: name=mysql shell=/bin/bash createhome=yes expires=99999
+
+#- name: update sudoers file
+#  lineinfile:
+#    dest: /etc/sudoers
+#    insertafter: EOF
+#    line: 'mysql ALL=(ALL) NOPASSWD: ALL'
+#    regexp: '^mysql .*'
+#    state: present
+

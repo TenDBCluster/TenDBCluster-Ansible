@@ -1,0 +1,7 @@
+---
+- hosts: tendb
+  roles:
+   - role: switch_master_slave
+  vars:
+    # master_old: '{% if role == "master" %}{{ inventory_hostname }}{% else %}{{ master }}{% endif %}'
+    master_old: '{% for host in ansible_play_batch if mysql_shard == hostvars[host]["mysql_shard"] and hostvars[host]["role"] == "master" %}{{ host }}{% endfor %}'

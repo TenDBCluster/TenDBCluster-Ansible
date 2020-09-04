@@ -1,0 +1,21 @@
+---
+- name: copy backup files from src_master to dest_slave
+  expect:
+    command: scp -o StrictHostKeyChecking=no -l 100000 -r mysql@{{master_mysql_host}}:{{backup_dir}}/ {{backup_dir}}
+    responses:
+      (?i)password: "{{ssh_mysql_password}}"
+  when: "role == 'slave' and master != inventory_hostname"
+  vars_prompt:
+    - name: "ssh_mysql_password"
+      prompt: "src master os user mysql password:"
+      private: yes
+      default: "qljl1rH"
+
+# scp -r -i xxxx root@{{master_mysql_host}}:{{backup_dir}}/ root@{{ansible_host}}:{{backup_dir}}
+
+#- name: copy backupfile from src to dest
+#  synchronize:
+#    src: ""
+#    dest: ""
+#    rsync_opts:
+#      - '-e "ssh mysql@{{master_mysql_host}}:{{backupdir}}/ {{backupdir}}"'

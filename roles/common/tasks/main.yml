@@ -1,0 +1,5 @@
+- include: check_config.yml
+- include: setup_myfacts.yml
+- include: mysql_user.yml
+- include: sshkey.yml
+  when: ansible_ssh_private_key_file is not defined

@@ -1,0 +1,12 @@
+- name: configure | Templating privileges to tspider
+  template:
+    src: "grant_tspider.sql.j2"
+    dest: "/data/grant_tspider.{{mysql_port}}.sql"
+#  when: "'tspider' in group_names"
+
+- name: configure | Apply privileges to tspider
+  shell: |
+    #mysql -f -u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}} -h{{ansible_host}} -P{{mysql_port}} < /data/grant_tspider.{{mysql_port}}.sql
+    mysql -f -uroot --socket {{mysql_data_dir}}/mysql.sock < /data/grant_tspider.{{mysql_port}}.sql
+    #rm -f /data/grant_tspider.{{mysql_port}}.sql
+  #  when: "'tspider' in group_names"

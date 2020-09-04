@@ -1,0 +1,5 @@
+- include: install.yml
+- include: setup_mgr.yml
+  when: "tdbctl_enable_mgr == 'true'"
+- include: grant.yml
+- include: flush.yml

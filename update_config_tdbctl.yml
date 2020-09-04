@@ -1,0 +1,7 @@
+---
+- hosts: tdbctl
+  tasks:
+    - name: update grant and route to tdbctl
+      include_role: 
+        name: tdbctl
+        tasks_from: grant.yml

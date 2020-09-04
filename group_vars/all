@@ -1,0 +1,79 @@
+# common
+fileserver: http://tendbcluster.com/downloads
+# fileserver: https://github.com/Tencent
+
+ansible_python_interpreter: /usr/bin/python
+
+iface: eth1
+mysql_version: "tendb-3.3"
+mysql_pkg: "mysql-5.7.20-linux-x86_64-{{mysql_version}}-gcs"
+mysql_pkg_md5: 01b0f74ff7a1d6a9b6fa31190adbac0a
+
+tspider_version: tspider-3.5.1
+tspider_pkg: "mariadb-10.3.7-linux-x86_64-{{tspider_version}}-gcs"
+tspider_pkg_md5: dfab1d71d37fac89aeb4af9004411076
+
+tdbctl_version: tdbctl-2.1
+tdbctl_pkg: "mysql-5.7.20-linux-x86_64-{{tdbctl_version}}-gcs"
+tdbctl_pkg_md5: 3b127981aa5835e914f71d6777982646
+
+checksum_enabled: false
+
+innodb_buffer_pool_size_pct_total: 0.8
+# innodb_buffer_pool_size_set_mb: 2048
+
+mycnf_mysqld:
+  innodb_flush_log_at_trx_commit: 0
+  character-set-server: utf8mb4
+
+mycnf_mysql:
+  default-character-set: utf8mb4
+
+mysql_user_grant:
+ # username, src_host, password, privileges, database, other
+# - ["appuser", "%", "app_pass", "select", "*.*", "with grant options"]
+# - ["{{tendbcluster_user_repl}}", "%", "tendbcluster_user_repl_pass", "replication slave, replication client", "*.*", ""]
+ - user: '{{tendbcluster_user_repl}}'
+   host: ["%"]
+   password: '{{tendbcluster_user_repl_pass}}'
+   privileges: 'replication slave, replication client'
+   databases: "*.*"
+   other: ""
+# - user: "appuser"
+#   host: ['127.0.0.1', 'localhost', '{{ansible_default_ipv4.address}}']
+#   password: "xxxx"
+##   password_hash: "*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9"
+#   privileges: "select,insert,update,delete"
+#   databases: "*.*"
+#   other: ""
+
+# mysql_user_revoke:
+
+backup_dir: /data/dbbak
+mysql_charset: utf8mb4
+
+mysql_conf_dir: /home/mysql/etc
+
+mysql_socket: "{{mysql_data_dir}}/mysql.sock"
+mysql_pid_file: "{{mysql_data_dir}}/mysqld.pid"
+mysql_conf_file: "{{mysql_conf_dir}}/my.cnf.{{mysql_port}}"
+
+# user admin
+tendbcluster_user_admin: tendbcluster
+tendbcluster_user_admin_pass: !vault |
+          $ANSIBLE_VAULT;1.2;AES256;mysql
+          36633635623633313635633163353066616566643466376437303364393038313534353363396438
+          3966613066616337373435383364366136373638616236640a643338303432343566343435643238
+          66333466643939663035303366333838393831343538303535313338376136353431616665383965
+          6466313035303533630a346466656565363933323636353139313266626531383636613134386162
+          3430
+# user repl
+tendbcluster_user_repl: repl_user
+tendbcluster_user_repl_pass: !vault |
+          $ANSIBLE_VAULT;1.2;AES256;mysql
+          38396436366461326139386230346561346432613262313830623763663433643233323633616330
+          3937373130346437343636326631646431316132663534330a323161656137323631333065353366
+          61633938346662636365653531633735616163323936326636636535373839633264396666626535
+          3038373034656439360a666434643962303666393133313539653864303135636433633632373639
+          6639
+tendbcluster_user_root_pass: "{{tendbcluster_user_admin_pass}}"

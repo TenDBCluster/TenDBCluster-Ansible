@@ -1,0 +1,23 @@
+---
+- name: install | Donwload mysql tarball from fileserver
+  get_url:
+    url: '{{ mysql_pkg_url }}'
+    dest: "/data/{{ mysql_pkg_tar }}"
+    #force: yes
+    #checksum: md5:{{mysql_pkg_md5}}
+  ignore_errors: yes
+
+- name: install | Copy mysql binary package to agent
+  unarchive:
+    src: "/data/{{ mysql_pkg_tar }}"
+    dest: "/usr/local"
+    creates: "/usr/local/{{ mysql_pkg }}"
+    remote_src: yes
+
+- name: install | Create symbolic link to /usr/local/mysql
+  file:
+    src: "/usr/local/{{ mysql_pkg }}"
+    dest: "/usr/local/mysql"
+    state: link
+  ignore_errors: yes
+

@@ -1,0 +1,11 @@
+---
+tdbctl_version: tdbctl-1.4
+tdbctl_pkg: "mysql-5.7.20-linux-x86_64-{{tdbctl_version}}-gcs"
+
+tdbctl_pkg_tar: "{{tdbctl_pkg}}.tar.gz"
+# tdbctl_pkg_url: "https://github.com/Tencent/TenDBCluster-Tdbctl/releases/download/{{tdbctl_version}}/{{tdbctl_pkg_tar}}"
+fileserver: "{% if fileserver == 'https://github.com/Tencent' %}https://github.com/Tencent/TenDBCluster-Tdbctl/releases/download/{{ tdbctl_version }}{% endif %}"
+tdbctl_pkg_url: "{{fileserver}}/{{tdbctl_pkg_tar}}"
+
+
+tdbctl_enable_mgr: "{% if groups['tdbctl'] | length >= 3 %}true{% else %}false{% endif %}"

@@ -1,0 +1,29 @@
+- hosts: tendbcluster
+  vars_prompt:
+    - name: "adminPass"
+      prompt: "admin password is neeeded to proceed the TenDBCluster destroy:"
+      private: yes
+      default: ""
+  tasks:
+    - fail:
+        msg: "tendbcluster admin password does not match!"
+      failed_when: adminPass != tendbcluster_user_admin_pass
+
+    - name: check instance running status
+      shell: ps -ef|grep mysqld|grep my.cnf.{{mysql_port}} |grep -v grep
+      register: ret_out
+      failed_when: ret_out.rc == 0
+
+    - name: rm tendb tspider tdbctl data files
+      command: rm -rf "{{item}}"
+      with_items:
+        - "{{mysql_data_dir}}"
+        - "{{mysql_log_dir}}"
+        - "{{backup_dir}}/*"
+        - "/data/{*.sql*,*.sh*}"
+        - "/data/*.tar.gz"
+        - "/usr/local/{tdbctl*,mysql*,tspider*,mariadb*}"
+      become: yes
+      become_user: mysql
+      become_method: su
+      when: "item != '/' and item != '/*'"

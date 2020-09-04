@@ -1,0 +1,16 @@
+---
+# change master
+- name: tempate script change master
+  template:
+    src: change_master_start.sh.j2
+    dest: /data/change_master_start.sh.{{ansible_host}}_{{mysql_port}}
+    mode: 0755
+  vars:
+    master_mysql_instanceid: "{% if mysql_shard == hostvars[master]['mysql_shard'] %}{{ master }}{% endif %}"
+    master_mysql_host: "{% if mysql_shard == hostvars[master]['mysql_shard'] %}{{ hostvars[master]['ansible_host'] }}{% endif %}"
+    master_mysql_port: "{% if mysql_shard == hostvars[master]['mysql_shard'] %}{{ hostvars[master]['mysql_port'] }}{% endif %}"
+  when: "role == 'slave' and master != inventory_hostname"
+
+- name: change master
+  command: sh /data/change_master_start.sh.{{ansible_host}}_{{mysql_port}}
+  when: "role == 'slave' and master != inventory_hostname"

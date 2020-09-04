@@ -1,0 +1,13 @@
+---
+- name: configure | Templating privileges to tendb
+  template:
+    src: "grant_tendb.sql.j2"
+    dest: "/data/grant_tendb.{{mysql_port}}.sql"
+#  when: "'tendb' in group_names"
+
+- name: configure | Apply privilegs to tendb
+  shell: |
+    # mysql -h127.0.0.1 -P20000 -u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}} < /data/grant_tendb.sql
+    mysql -f -uroot --socket {{mysql_data_dir}}/mysql.sock < /data/grant_tendb.{{mysql_port}}.sql
+    #rm -f /data/grant_tendb.{{mysql_port}}.sql
+#  when: "'tendb' in group_names"

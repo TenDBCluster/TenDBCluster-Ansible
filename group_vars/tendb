@@ -1,0 +1,9 @@
+---
+instance_type: mysql
+mysql_basedir: /usr/local/mysql
+mycnf_mysqld:
+  innodb_flush_log_at_trx_commit: 0
+  character-set-server: utf8mb4
+  max_connections: 5000
+
+server_id: "{{ (groups[mysql_shard].index(inventory_hostname) | int +1 ) * 1000 }}"

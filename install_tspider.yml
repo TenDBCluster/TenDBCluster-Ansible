@@ -1,0 +1,11 @@
+---
+- hosts: tspider
+  roles:
+    - role: tspider
+
+- hosts: tspider
+  tasks:
+    - name: grant privileges for tspider
+      include_role:
+        name: tspider
+        tasks_from: grant.yml

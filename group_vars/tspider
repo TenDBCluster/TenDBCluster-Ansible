@@ -1,0 +1,7 @@
+---
+instance_type: tspider
+tspider_basedir: /usr/local/tspider
+
+mycnf_mysqld:
+  - innodb_log_buffer_size: 120M
+  - innodb_flush_log_at_trx_commit: 0

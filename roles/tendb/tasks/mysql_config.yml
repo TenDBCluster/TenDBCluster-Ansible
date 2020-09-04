@@ -1,0 +1,38 @@
+---
+# - include: setup_myfacts.yml
+
+- name: set fact
+  set_fact:
+    tendbcluster:
+      tendb: "{% for h in groups['tendb'] if hostvars[h]['ansible_host'] == ansible_host %}{{ h }}={{hostvars[h]['ansible_host']}}:{{hostvars[h]['mysql_port']}}{{ loop.last | ternary('', ' ') }}{% endfor %}"
+      tspider: "{% for h in groups['tspider'] if hostvars[h]['ansible_host'] == ansible_host %}{{ h }}={{hostvars[h]['ansible_host']}}:{{hostvars[h]['mysql_port']}}{{ loop.last | ternary('', ' ') }}{% endfor %}"
+      tdbctl: "{% for h in groups['tdbctl'] if hostvars[h]['ansible_host'] == ansible_host %}{{ h }}={{hostvars[h]['ansible_host']}}:{{hostvars[h]['mysql_port']}}{{ loop.last | ternary('', ' ') }}{% endfor %}"
+
+- name: configure | set facts info for cacl buffer pool size
+  set_fact:
+    mysql_instances_count: "{{ tendbcluster.tendb.split(' ') | length }}"
+#    service_roles:
+#      tendb: "{{ ansible_local.tendbcluster.tendb }}"
+#      tspider: "{{ ansible_local.tendbcluster.tspider }}"
+#      tdbctl: "{{ ansible_local.tendbcluster.tdbctl }}"
+#  vars:
+#    tendbcluster2:
+#      tendb: "{% for h in groups['tendb'] if hostvars[h]['ansible_host'] == ansible_host %}{{ h }}={{hostvars[h]['ansible_host']}}:{{hostvars[h]['mysql_port']}} {% endfor %}"
+#      tspider: "{% for h in groups['tspider'] if hostvars[h]['ansible_host'] == ansible_host %}{{ h }}={{hostvars[h]['ansible_host']}}:{{hostvars[h]['mysql_port']}} {% endfor %}"
+#      tdbctl: "{% for h in groups['tdbctl'] if hostvars[h]['ansible_host'] == ansible_host %}{{ h }}={{hostvars[h]['ansible_host']}}:{{hostvars[h]['mysql_port']}} {% endfor %}"
+#    # mysql_instances_count: "{{ ansible_local.tendbcluster.tendb | length | int}}"
+
+- name: configure | set facts for getting innodb_buffer_pool_size_mb
+  set_fact:
+    innodb_buffer_pool_size_mb_auto: "{{ (ansible_local.custom.my_memtotal_mb * innodb_buffer_pool_size_pct_total / (mysql_instances_count|int)) | round(0,'floor') | int }}"
+    # innodb_buffer_pool_size_mb: "{{ [(ansible_local.custom.my_memtotal_mb * innodb_buffer_pool_size_pct_total / (mysql_instances_count|int) ) | round(0,'floor') | int, innodb_buffer_pool_size_set_mb] | min}}"
+
+- name: print mysql instance info
+  debug:
+    msg: "mysql_instances_count={{mysql_instances_count}} | {{inventory_hostname}}={{ansible_host}}:{{mysql_port}} | innodb_buffer_pool_size_mb=min({{ innodb_buffer_pool_size_mb }},{{innodb_buffer_pool_size_mb_auto}})M | mysql_data_dir={{mysql_data_dir}}"
+
+- name: configure | Setup my.cnf file.
+  template:
+    dest: "{{ mysql_conf_dir }}/my.cnf.{{mysql_port}}"
+    src: my.cnf.tendb.j2
+    mode: 0644

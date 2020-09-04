@@ -1,0 +1,5 @@
+---
+- hosts: tendbcluster
+  tasks:
+    - include: stop_instance.yml
+    - include: start_instance.yml

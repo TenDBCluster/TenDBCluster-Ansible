@@ -1,0 +1,18 @@
+---
+- hosts: tspider
+  tasks:
+  - name: remove tspider node from tdbctl
+    shell: |
+      USERPASS_OPTS="-u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}}"
+      mysql $USERPASS_OPTS -h{{tdbctl_host}} -P{{tdbctl_port}} -e "delete from mysql.servers where Host='{{tspider_host}}' and Port='{{mysql_port}}' and Wrapper='SPIDER'; tdbctl flush routing; "
+      echo "delete from mysql.servers where Host='{{tspider_host}}' and Port='{{mysql_port}}' and Wrapper='SPIDER'; tdbctl flush routing; " > /tmp/delete.sql
+    vars:
+      tspider_host: "{{ansible_host}}"
+      tspider_port: "{{mysql_port}}"
+      tdbctl_host: "{{hostvars[groups['tdbctl'][0]]['ansible_host']}}"
+      tdbctl_port: "{{hostvars[groups['tdbctl'][0]]['mysql_port']}}"
+    delegate_to: "{{ groups['tdbctl'][0] }}"
+  
+  - name: stop tspider node
+    shell: |
+      ps -ef|grep mysqld|grep my.cnf.{{mysql_port}} |grep -v grep|awk '{print "kill "$2}'|sh ; sleep 2

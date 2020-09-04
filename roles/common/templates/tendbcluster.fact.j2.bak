@@ -1,0 +1,14 @@
+[tendb]
+{% for host in groups['tendb'] + groups['tendb_slave'] if hostvars[host].ansible_host == ansible_default_ipv4.address %}
+{{host}}={{hostvars[host].ansible_host}}:{{hostvars[host].mysql_port}}
+{% endfor %}
+
+[tspider]
+{% for host in groups['tspider'] if hostvars[host].ansible_host == ansible_default_ipv4.address %}
+{{host}}={{hostvars[host].ansible_host}}:{{hostvars[host].mysql_port}}
+{% endfor %}
+
+[tdbctl]
+{% for host in groups['tdbctl'] if hostvars[host].ansible_host == ansible_default_ipv4.address %}
+{{host}}={{hostvars[host].ansible_host}}:{{hostvars[host].mysql_port}}
+{% endfor %}

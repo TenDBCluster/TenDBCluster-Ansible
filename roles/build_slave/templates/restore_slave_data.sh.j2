@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# get backup from remote master
+backup_dir={{backup_dir}}
+backup_file={{master_mysql_host}}_{{master_mysql_port}}.sql
+# scp mysql@{{master_mysql_host}}:${backup_dir}/${backup_file} ${backup_dir}
+
+# MYSQL_SLAVE_OPTS="-u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}} -h{{slave_mysql_host}} -P{{slave_mysql_port}}"
+MYSQL_SLAVE_OPTS="-u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}} -h127.0.0.1 -P{{slave_mysql_port}}"
+
+# @@GLOBAL.GTID_PURGED can only be set when @@GLOBAL.GTID_EXECUTED is empty
+mysql $MYSQL_SLAVE_OPTS -e "reset master"
+
+# check databases exists
+mysql $MYSQL_SLAVE_OPTS -e "show databases"
+# if database already exists, failed
+
+mysql $MYSQL_SLAVE_OPTS -e "stop slave; reset slave all;"
+mysql $MYSQL_SLAVE_OPTS < ${backup_dir}/$backup_file

@@ -1,0 +1,37 @@
+---
+- name: configure | Templating privileges to tendb
+  template:
+    src: "grant_tendb.sql.j2"
+    dest: "/data/grant_tendb.sql"
+  when: "'tendb' in group_names"
+
+- name: configure | Apply privilegs to tendb
+  shell: |
+    # mysql -h127.0.0.1 -P20000 -u{{tendbcluster_user_admin}} -p{{tendbcluster_user_admin_pass}} < /data/grant_tendb.sql
+    mysql -h127.0.0.1 -uroot -s {{mysql_data_dir}}/mysql.sock < /data/grant_tendb.sql
+    rm -f /data/grant_tendb.sql
+  when: "'tendb' in group_names"
+
+- name: configure | Templating privileges to tspider
+  template:
+    src: "grant_tspider.sql.j2"
+    dest: "/data/grant_tspider.sql"
+  when: "'tspider' in group_names"
+
+- name: configure | Apply privileges to tspider
+  shell: |
+    mysql -h127.0.0.1 -uroot -s {{mysql_data_dir}}/mysql.sock < /data/grant_tspider.sql
+    rm -f /data/grant_tspider.sql
+  when: "'tspider' in group_names"
+
+- name: configure | Templating routes
+  template:
+    src: "flush_tdbctl.sql.j2"
+    dest: "/data/flush_tdbctl.sql"
+  when: "'tdbctl' in group_names"
+
+- name: configure | Flush routes to tspider
+  shell: |
+    mysql -h127.0.0.1 -uroot -s {{mysql_data_dir}}/mysql.sock <  /data/flush_tdbctl.sql
+    rm -f /data/flush_tdbctl.sql
+  when: "'tdbctl' in group_names"

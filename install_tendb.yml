@@ -1,0 +1,17 @@
+---
+#- hosts: tendb
+#  tasks:
+#    - include: setup_myfacts.yml
+
+- hosts: tendb
+  roles:
+    - role: tendb
+      when: "role == 'master'"
+
+#- hosts: tendb
+#  tasks:
+#    - name: grant privileges for tendb
+#      include_role:
+#        name: tendb
+#        tasks_from: grant.yml
+#      when: "role == 'master'"

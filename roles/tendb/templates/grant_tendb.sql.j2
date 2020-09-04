@@ -1,0 +1,25 @@
+-- grant for tspider
+create user {{tendbcluster_user_admin}}@'127.0.0.1' identified by '{{tendbcluster_user_admin_pass}}';
+grant all privileges on *.* to {{tendbcluster_user_admin}}@'127.0.0.1';
+-- grant all privileges on *.* to {{tendbcluster_user_admin}}@'{{ansible_host}}';
+
+{% for host in groups['tspider'] %}
+create user {{tendbcluster_user_admin}}@'{{ hostvars[host]['ansible_host'] }}' identified by '{{tendbcluster_user_admin_pass}}';
+grant all privileges on *.* to {{tendbcluster_user_admin}}@'{{ hostvars[host]['ansible_host'] }}';
+{% endfor %}
+
+-- grant for tdbctl, local
+create user {{tendbcluster_user_admin}}@'127.0.0.1' identified by '{{tendbcluster_user_admin_pass}}';
+grant all privileges on *.* to {{tendbcluster_user_admin}}@'127.0.0.1' with grant option;
+grant all privileges on *.* to {{tendbcluster_user_admin}}@'localhost' identified by '{{tendbcluster_user_admin_pass}}' with grant option;
+
+{% for host in groups['tdbctl'] %}
+create user {{tendbcluster_user_admin}}@'{{ hostvars[host]['ansible_host'] }}' identified by '{{tendbcluster_user_admin_pass}}';
+grant all privileges on *.* to {{tendbcluster_user_admin}}@'{{ hostvars[host]['ansible_host'] }}' with grant option;
+{% endfor %}
+
+-- grant for replication user
+CREATE USER {{tendbcluster_user_repl}}@'%' IDENTIFIED BY '{{tendbcluster_user_repl_pass}}';
+GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO {{tendbcluster_user_repl}}@'%';
+CREATE USER {{tendbcluster_user_repl}}@'localhost' IDENTIFIED BY '{{tendbcluster_user_repl_pass}}';
+GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO {{tendbcluster_user_repl}}@'localhost';
