@@ -4,7 +4,10 @@
 #    - init_adduser
 
 - name: create mysql user
-  user: name=mysql shell=/bin/bash createhome=yes expires=99999
+  user: name=mysql shell=/bin/bash createhome=yes home=/home/mysql expires=-1
+
+- name: set mysql home permissions
+  command: chmod 755 /home/mysql
 
 #- name: update sudoers file
 #  lineinfile:

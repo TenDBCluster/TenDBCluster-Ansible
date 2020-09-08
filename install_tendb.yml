@@ -4,6 +4,10 @@
 #    - include: setup_myfacts.yml
 
 - hosts: tendb
+  tasks:
+    - include: check_config.yml
+
+- hosts: tendb
   roles:
     - role: tendb
       when: "role == 'master'"

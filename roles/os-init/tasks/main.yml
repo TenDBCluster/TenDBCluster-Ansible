@@ -25,7 +25,7 @@
   tags: selinux
 
 - name: setenforce off
-  command: setenforce off
+  command: setenforce 0
   ignore_errors: yes
   
 - block:
@@ -54,6 +54,13 @@
     - libtool
     - make
     - automake
+    - libaio
+    - vim
+    - wget
+    - telnet
+    - git
+    - unzip
+    - bzip2
   tags: gcc
   ignore_errors: yes
   

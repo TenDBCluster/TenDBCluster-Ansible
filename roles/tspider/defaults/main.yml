@@ -4,9 +4,9 @@ tspider_pkg: "mariadb-10.3.7-linux-x86_64-{{tspider_version}}-gcs"
 tspider_pkg_tar: "{{tspider_pkg}}.tar.gz"
 
 # tspider_pkg_url: "https://github.com/Tencent/TenDBCluster-TSpider/releases/download/{{tspider_version}}/{{tspider_pkg_tar}}"
-fileserver: "{% if fileserver == 'https://github.com/Tencent' %}https://github.com/Tencent/TenDBCluster-TSpider/releases/download/{{ tspider_version }}{% endif %}"
+fileserver_tspider: "{% if fileserver == 'https://github.com/Tencent' %}https://github.com/Tencent/TenDBCluster-TSpider/releases/download/{{ tspider_version }}{% else %}{{ fileserver }}{% endif %}"
 
-tspider_pkg_url: "{{fileserver}}/{{tspider_pkg_tar}}"
+tspider_pkg_url: "{{fileserver_tspider}}/{{tspider_pkg_tar}}"
 
 
 autoinc_value: "{{ groups.tspider.index(inventory_hostname) + 1 }}"

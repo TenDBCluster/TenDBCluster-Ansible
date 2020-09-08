@@ -6,5 +6,7 @@ cat << EOF | mysql $MYSQL_SLAVE_OPTS
 stop slave;
 CHANGE MASTER TO MASTER_HOST='{{master_mysql_host}}',MASTER_port={{master_mysql_port}},MASTER_USER='{{tendbcluster_user_repl}}',MASTER_PASSWORD='{{tendbcluster_user_repl_pass}}',MASTER_AUTO_POSITION=1;
 start slave;
-show slave status\G
+show slave status;
+
+set global read_only=ON;
 EOF

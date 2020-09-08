@@ -1,0 +1,67 @@
+[all:vars]
+ansible_ssh_user=root
+ansible_ssh_port=22
+ansible_ssh_private_key_file=/root/.ssh/tendbcluster_rsa
+# set the ssh public key to remote hosts
+ansible_ssh_public_key_file=/root/.ssh/tendbcluster_rsa.pub
+
+# the shard_number must be the number of tendb:children
+[tendbcluster:vars]
+tendbcluster_name=test
+tendbcluster_shard_num=4
+node_status=1
+
+mysql_home_dir=/home/mysql/mysqldata
+mysql_log_dir=/home/mysql/mysqllog
+innodb_buffer_pool_size_mb={{innodb_buffer_pool_size_mb_auto}}
+mysql_data_dir="{{mysql_home_dir}}/{{mysql_port}}"
+
+################
+[tendbcluster:children]
+tendb
+tspider
+tdbctl
+
+# all this child must be defined later
+[tendb:children]
+SPT0
+SPT1
+SPT2
+SPT3
+
+################
+#### SPIDER ####
+# the ansible_host:mysql_port MUST be unique in this inventory
+[tspider]
+tspider-node-01 ansible_host=192.168.1.106 mysql_port=25000
+tspider-node-02 ansible_host=192.168.1.26 mysql_port=25000
+
+################
+#### TDBCTL ####
+# MGR will be setup when tdbctl node num >=3
+# you need to set group_replication_local_address to different port when installing tdbctl on the same machine
+[tdbctl]
+tdbctl-node-01 ansible_host=192.168.1.26  mysql_port=26000 group_replication_local_address={{ansible_host}}:23306
+tdbctl-node-02 ansible_host=192.168.1.2   mysql_port=26000 group_replication_local_address={{ansible_host}}:23306
+tdbctl-node-03 ansible_host=192.168.1.106 mysql_port=26000 group_replication_local_address={{ansible_host}}:23306
+
+################
+#### SPT0 ####
+[SPT0]
+tendb-spt0 ansible_host=192.168.1.95 mysql_shard=SPT0 mysql_port=20000 role=master
+tendb-spt0-1 ansible_host=192.168.1.147 mysql_shard=SPT0 mysql_port=20000 role=slave master=tendb-spt0
+
+#### SPT1 ####
+[SPT1]
+tendb-spt1 ansible_host=192.168.1.95 mysql_shard=SPT1 mysql_port=20001 role=master
+tendb-spt1-1 ansible_host=192.168.1.147 mysql_shard=SPT1 mysql_port=20001 role=slave master=tendb-spt1
+
+#### SPT2 ####
+[SPT2]
+tendb-spt2 ansible_host=192.168.1.2 mysql_shard=SPT2 mysql_port=20002 role=master
+tendb-spt2-1 ansible_host=192.168.1.130 mysql_shard=SPT2 mysql_port=20002 role=slave master=tendb-spt2
+
+#### SPT3 ####
+[SPT3]
+tendb-spt3 ansible_host=192.168.1.2 mysql_shard=SPT3 mysql_port=20003 role=master
+tendb-spt3-1 ansible_host=192.168.1.130 mysql_shard=SPT3 mysql_port=20003 role=slave master=tendb-spt3

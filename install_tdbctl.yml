@@ -1,5 +1,9 @@
 ---
 - hosts: tdbctl
+  tasks:
+    - include: check_config.yml
+
+- hosts: tdbctl
   roles:
     - role: tdbctl
 

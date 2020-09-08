@@ -15,7 +15,7 @@ grant all privileges on *.* to {{tendbcluster_user_admin}}@'{{ hostvars[host]['a
 {% endfor %}
 
 -- grant for replication user
-CREATE USER {{tendbcluster_user_repl}}@'%' IDENTIFIED BY '{{tendbcluster_user_repl_pass}}';
-GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO {{tendbcluster_user_repl}}@'%';
-CREATE USER {{tendbcluster_user_repl}}@'localhost' IDENTIFIED BY '{{tendbcluster_user_repl_pass}}';
-GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO {{tendbcluster_user_repl}}@'localhost';
+-- CREATE USER {{tendbcluster_user_repl}}@'%' IDENTIFIED BY '{{tendbcluster_user_repl_pass}}';
+GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO {{tendbcluster_user_repl}}@'%' IDENTIFIED BY '{{tendbcluster_user_repl_pass}}';
+-- CREATE USER {{tendbcluster_user_repl}}@'localhost' IDENTIFIED BY '{{tendbcluster_user_repl_pass}}';
+GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO {{tendbcluster_user_repl}}@'localhost' IDENTIFIED BY '{{tendbcluster_user_repl_pass}}';

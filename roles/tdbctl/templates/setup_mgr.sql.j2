@@ -1,5 +1,9 @@
--- SET SQL_LOG_BIN=0;grant REPLICATION SLAVE ON *.* TO '{{tendbcluster_user_repl}}'@'%' identified by '{{tendbcluster_user_repl_pass}}';
--- SET SQL_LOG_BIN=1;
+-- grant for replication user
+SET SQL_LOG_BIN=0;
+GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO {{tendbcluster_user_repl}}@'%' IDENTIFIED BY '{{tendbcluster_user_repl_pass}}';
+GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO {{tendbcluster_user_repl}}@'localhost' IDENTIFIED BY '{{tendbcluster_user_repl_pass}}';
+SET SQL_LOG_BIN=1;
+
 reset master;
 change master to master_user='{{tendbcluster_user_repl}}',master_password='{{tendbcluster_user_repl_pass}}' for channel 'group_replication_recovery';
 INSTALL PLUGIN group_replication SONAME 'group_replication.so';

@@ -8,3 +8,4 @@
       - tendbcluster_name is defined
       - ansible_ssh_public_key_file is defined
       - mysql_data_dir != '/'
+      - tendbcluster_user_admin != tendbcluster_user_admin_pass

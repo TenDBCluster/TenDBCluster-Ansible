@@ -6,21 +6,17 @@
     force: no
     checksum: "{{ 'md5:' + tspider_pkg_md5 if checksum_enabled else '' }}"
 
-- name: install | Copy mysql binary package to agent
-  unarchive:
-    src: "/data/{{ tspider_pkg_tar }}"
-    dest: "/usr/local"
+- name: install | Untar package
+  shell: sleep $[ ( $RANDOM % 5 )  + 1 ]s ; test -e /usr/local/{{ tspider_pkg }} || tar --skip-old-files --no-overwrite-dir -xf /data/{{ tspider_pkg_tar }} -C /usr/local/
+  args:
     creates: "/usr/local/{{ tspider_pkg }}"
-    remote_src: yes
-    extra_opts:
-      - --keep-old-files
-      - --no-overwrite-dir
 
 - name: install | Create symbolic link to /usr/local/tspider
   file:
     src: "/usr/local/{{ tspider_pkg }}"
     dest: "{{tspider_basedir}}"
     state: link
+  ignore_errors: yes
 
 - name: install | Make mysql dirs
   file:

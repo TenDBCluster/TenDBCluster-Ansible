@@ -1,5 +1,9 @@
 ---
 - hosts: tspider
+  tasks:
+    - include: check_config.yml
+
+- hosts: tspider
   roles:
     - role: tspider
 

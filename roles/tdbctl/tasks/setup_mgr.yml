@@ -8,7 +8,6 @@
   shell: |
     mysql -f -uroot --socket {{mysql_data_dir}}/mysql.sock < /data/setup_mgr.sql.{{mysql_port}}
   when: "groups.tdbctl.index(inventory_hostname) == 0"
-  # delegate_to: "{{ groups['tdbctl'][0] }}"
 
 - name: start group_replication on the rest nodes
   shell: |
