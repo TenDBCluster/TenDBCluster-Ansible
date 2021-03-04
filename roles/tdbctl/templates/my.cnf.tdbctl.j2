@@ -28,6 +28,9 @@ loose-group_replication_group_seeds="{% for h in groups['tdbctl'] %}{{ hostvars[
 loose-group_replication_bootstrap_group=off
 #loose-group_replication_single_primary_mode=off
 loose-group_replication_ip_whitelist='127.0.0.1,{% for h in groups['tdbctl'] %}{{ hostvars[h]['ansible_host'] }}{{ loop.last | ternary('', ',') }}{% endfor %}'
+
+{% else %}
+tc_is_primary=ON
 {% endif %}
 
 [mysql]

@@ -5,6 +5,7 @@ socket={{mysql_data_dir}}/mysql.sock
 [mysqld]
 default-storage-engine=innodb
 skip-name-resolve
+sql_mode=''
 datadir={{mysql_data_dir}}/data
 character-set-server=utf8mb4
 # innodb_buffer_pool_size={% if innodb_buffer_pool_size_mb is defined %}{{ [innodb_buffer_pool_size_mb_auto, innodb_buffer_pool_size_mb] | min }}{% else %}{{ innodb_buffer_pool_size_mb_auto }}{% endif %}M

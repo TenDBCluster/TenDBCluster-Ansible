@@ -5,3 +5,5 @@ tspider_basedir: /usr/local/tspider
 mycnf_mysqld:
   - innodb_log_buffer_size: 120M
   - innodb_flush_log_at_trx_commit: 0
+  - character-set-server: utf8mb4
+  - max_connections: 5000

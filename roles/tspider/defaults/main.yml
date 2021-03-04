@@ -1,5 +1,5 @@
 ---
-tspider_version: tspider-3.5.1
+tspider_version: tspider-3.6.1
 tspider_pkg: "mariadb-10.3.7-linux-x86_64-{{tspider_version}}-gcs"
 tspider_pkg_tar: "{{tspider_pkg}}.tar.gz"
 
