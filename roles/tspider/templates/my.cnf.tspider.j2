@@ -34,6 +34,9 @@ spider_get_sts_or_crd=1
 spider_index_hint_pushdown=1
 tmpdir={{mysql_data_dir}}/tmp
 sql_mode=''
+log_sql_use_mutil_partition=ON
+max_allowed_packet=64M
+long_query_time=1
 report_host={{ansible_host}}
 
 spider_auto_increment_mode_switch=1
